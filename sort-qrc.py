@@ -83,7 +83,7 @@ def main(argv):
     tree = ET.parse(filename)
     root = tree.getroot()
 
-    root[:] = sorted(root, key=lambda e: extract_qresource_elem_attr_key(e))
+    root[:] = sorted(root, key=extract_qresource_elem_attr_key)
 
     for child in root.iter("qresource"):
         file_elems = uniq_file_elems(child) if unique else child
