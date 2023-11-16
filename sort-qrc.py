@@ -1,35 +1,45 @@
 #!/usr/bin/env python3
+import argparse
 import sys
 import xml.etree.ElementTree as ET
 
 
-def print_help():
-    print(
-        f"""Usage: {sys.argv[0]} [OPTION] [INPUT-FILE]
-
-  -i  write output to INPUT-FILE, no backup is made
-  -u  remove duplicate files with the same prefix and alias
-
-Each option must be speficied separately.""",
-        file=sys.stderr,
-    )
-
-
 def load_args(argv):
-    # -i    inplace, default output stdout
-    # -u    unique
+    parser = argparse.ArgumentParser(
+        description="Write sorted Qt resource (.qrc) file contents to standard output",
+        add_help=False,  # help arg added manually so it's displayed last in help text
+    )
+    parser.add_argument(
+        "-i", help="write output to INPUT-FILE, no backup is made", action="store_true"
+    )
+    parser.add_argument(
+        "-u",
+        help="remove duplicate files with the same prefix and alias",
+        action="store_true",
+    )
+    parser.add_argument(
+        "input_file",
+        nargs="?",
+        type=argparse.FileType("r"),
+        default=sys.stdin,
+        metavar="INPUT-FILE",
+    )
+    parser.add_argument(
+        "--help",
+        action="help",
+        default=argparse.SUPPRESS,
+        help="display this help message and exit",
+    )
+    args = parser.parse_args(argv[1:])
+
     output = None
-    filename = None
-    unique = None
-    for arg in argv[1:]:
-        match arg:
-            case "-i":
-                output = "inplace"
-            case "-u":
-                unique = True
-            case _:
-                assert filename == None  # unknown arg or multiple files specified
-                filename = arg
+    if args.i:
+        output = "inplace"
+    filename = args.input_file.name if output == "inplace" else args.input_file
+    unique = args.u
+    assert (
+        output != "inplace" or args.input_file.name != "<stdin>"
+    ), "can't write in-place to standard input"
     return output, filename, unique
 
 
@@ -68,9 +78,6 @@ def uniq_file_elems(file_elems):
 
 
 def main(argv):
-    if len(argv) <= 1:
-        print_help()
-        return 1
     output, filename, unique = load_args(argv)
 
     tree = ET.parse(filename)
