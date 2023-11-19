@@ -90,10 +90,15 @@ def main(argv):
         child[:] = sorted(file_elems, key=extract_file_elem_sort_key)
 
     ET.indent(tree, space="    ", level=0)
+    # For newline at end of file
+    root.tail = root.tail + "\n" if root.tail else "\n"
+
     if output == "inplace":
-        tree.write(filename, "unicode")
+        out_file_of_filename = filename
     else:
-        print(ET.tostring(root, "unicode"))
+        out_file_of_filename = sys.stdout
+
+    tree.write(out_file_of_filename, "unicode")
     return 0
 
 
